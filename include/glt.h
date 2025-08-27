@@ -1,8 +1,8 @@
 #pragma once
 
-#include <stddef.h>
-
-#include <glad/glad.h>
-
-char *load_text_file(const char *path, size_t *out_size);
-
+#include "glt_info.h"
+#include "glt_vertex_buffer.h"
+#include "glt_vertex_array.h"
+#include "glt_glad_wrapper.h"
+#include "glt_shader.h"
+#include "glt_window.h"
