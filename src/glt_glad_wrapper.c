@@ -7,7 +7,7 @@
 
 int glt_init_glad(void) {
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
-        fprintf(stderr, "[ERROR]: failed to initialize GLAD\n");
+        fprintf(stderr, "[GLAD::ERROR]: failed to initialize GLAD\n");
         return 0;
     }
     return 1;

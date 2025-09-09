@@ -14,7 +14,7 @@ static void framebuffer_size_callback(GLFWwindow *handle, int width, int height)
 
 glt_window_t *glt_window_create(int width, int height, const char *title, int major_ver, int minor_ver) {
     if (!glfwInit()) {
-        fprintf(stderr, "[ERROR::WINDOW] failed to initialize GLFW\n");
+        fprintf(stderr, "[WINDOW::ERROR] failed to initialize GLFW\n");
         return NULL;
     }
 
@@ -27,7 +27,7 @@ glt_window_t *glt_window_create(int width, int height, const char *title, int ma
 
     GLFWwindow *handle = glfwCreateWindow(width, height, title, NULL, NULL);
     if (!handle) {
-        fprintf(stderr, "[ERROR::WINDOW] failed to create GLFW window\n");
+        fprintf(stderr, "[WINDOW::ERROR] failed to create GLFW window\n");
         glfwTerminate();
         return NULL;
     }
@@ -43,7 +43,7 @@ glt_window_t *glt_window_create(int width, int height, const char *title, int ma
 
     glt_window_t *window = malloc(sizeof(glt_window_t));
     if (!window) {
-        fprintf(stderr, "[ERROR::WINDOW] failed to allocate memory for window\n");
+        fprintf(stderr, "[WINDOW::ERROR] failed to allocate memory for window\n");
         glfwDestroyWindow(handle);
         glfwTerminate();
         return NULL;
@@ -72,9 +72,13 @@ GLFWwindow *glt_window_get_handle(const glt_window_t *window) {
     return window ? window->handle : NULL;
 }
 
-int glt_window_should_close(const glt_window_t *window) {
+void glt_window_set_vsync(bool enabled) {
+    glfwSwapInterval(enabled ? 1 : 0);
+}
+
+bool glt_window_should_close(const glt_window_t *window) {
     if (!window || !window->handle) {
-        return 1;
+        return true;
     }
     return glfwWindowShouldClose(window->handle);
 }
@@ -88,7 +92,7 @@ void glt_window_process_input(const glt_window_t *window) {
     }
 }
 
-void glt_window_swap_buffers(glt_window_t *window) {
+void glt_window_swap_buffers(const glt_window_t *window) {
     if (window && window->handle) {
         glfwSwapBuffers(window->handle);
     }

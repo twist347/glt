@@ -7,7 +7,7 @@ struct glt_vertex_array_t {
     GLuint id;
 };
 
-static void bind_vao_and_vbo_(const glt_vertex_array_t *vao, const glt_vertex_buffer_t *vbo);
+static void bind_vao_and_vbo(const glt_vertex_array_t *vao, const glt_vertex_buffer_t *vbo);
 
 glt_vertex_array_t *glt_vertex_array_create(void) {
     glt_vertex_array_t *array = malloc(sizeof(glt_vertex_array_t));
@@ -66,12 +66,13 @@ void glt_vertex_array_attrib_pointerf(
     const glt_vertex_array_t *vao,
     const glt_vertex_buffer_t *vbo,
     GLuint index, GLint size, GLenum type, GLboolean normalized,
-    GLsizei stride, const void *pointer) {
+    GLsizei stride, const void *pointer
+) {
     if (!vao || !vbo) {
         fprintf(stderr, "[VERTEX_ARRAY::ERROR] attrib_pointerf: null vao or vbo\n");
         return;
     }
-    bind_vao_and_vbo_(vao, vbo);
+    bind_vao_and_vbo(vao, vbo);
     glVertexAttribPointer(index, size, type, normalized, stride, pointer);
     glEnableVertexAttribArray(index);
 }
@@ -86,7 +87,7 @@ void glt_vertex_array_attrib_pointeri(
         fprintf(stderr, "[VERTEX_ARRAY::ERROR] attrib_pointeri: null vao or vbo\n");
         return;
     }
-    bind_vao_and_vbo_(vao, vbo);
+    bind_vao_and_vbo(vao, vbo);
     glVertexAttribIPointer(index, size, type, stride, pointer);
     glEnableVertexAttribArray(index);
 }
@@ -101,12 +102,12 @@ void glt_vertex_array_attrib_pointerl(
         fprintf(stderr, "[VERTEX_ARRAY::ERROR] attrib_pointerl: null vao or vbo\n");
         return;
     }
-    bind_vao_and_vbo_(vao, vbo);
+    bind_vao_and_vbo(vao, vbo);
     glVertexAttribLPointer(index, size, type, stride, pointer);
     glEnableVertexAttribArray(index);
 }
 
-static void bind_vao_and_vbo_(const glt_vertex_array_t *vao, const glt_vertex_buffer_t *vbo) {
+static void bind_vao_and_vbo(const glt_vertex_array_t *vao, const glt_vertex_buffer_t *vbo) {
     glBindVertexArray(vao ? vao->id : 0);
     glBindBuffer(GL_ARRAY_BUFFER, vbo ? glt_vertex_buffer_get_id(vbo) : 0);
 }

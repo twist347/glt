@@ -6,3 +6,4 @@
 #include "glt_glad_wrapper.h"
 #include "glt_shader.h"
 #include "glt_window.h"
+#include "glt_texture.h"

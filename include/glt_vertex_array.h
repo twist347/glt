@@ -24,16 +24,19 @@ void glt_vertex_array_attrib_pointerf(
     const glt_vertex_array_t *vao,
     const glt_vertex_buffer_t *vbo,
     GLuint index, GLint size, GLenum type, GLboolean normalized,
-    GLsizei stride, const void *pointer);
+    GLsizei stride, const void *pointer
+);
 
 void glt_vertex_array_attrib_pointeri(
     const glt_vertex_array_t *vao,
     const glt_vertex_buffer_t *vbo,
     GLuint index, GLint size, GLenum type,
-    GLsizei stride, const void *pointer);
+    GLsizei stride, const void *pointer
+);
 
 void glt_vertex_array_attrib_pointerl(
     const glt_vertex_array_t *vao,
     const glt_vertex_buffer_t *vbo,
     GLuint index, GLint size, GLenum type,
-    GLsizei stride, const void *pointer);
+    GLsizei stride, const void *pointer
+);
