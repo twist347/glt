@@ -28,7 +28,6 @@ endif ()
 
 add_library(glt STATIC
         src/glt_window.c
-        src/glt_glad_wrapper.c
         src/glt_shader.c
         src/glt_vertex_buffer.c
         src/glt_vertex_array.c

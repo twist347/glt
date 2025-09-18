@@ -3,14 +3,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <glad/glad.h>
+#include "GLFW/glfw3.h"
+
 struct glt_window_t {
     GLFWwindow *handle;
 };
 
-static void framebuffer_size_callback(GLFWwindow *handle, int width, int height) {
-    (void) handle;
-    glViewport(0, 0, width, height);
-}
+// helper funcs
+
+static void framebuffer_size_callback(GLFWwindow *handle, int width, int height);
+
+static bool init_glad(void);
+
+// public funcs
 
 glt_window_t *glt_window_create(int width, int height, const char *title, int major_ver, int minor_ver) {
     if (!glfwInit()) {
@@ -28,11 +34,17 @@ glt_window_t *glt_window_create(int width, int height, const char *title, int ma
     GLFWwindow *handle = glfwCreateWindow(width, height, title, NULL, NULL);
     if (!handle) {
         fprintf(stderr, "[WINDOW::ERROR] failed to create GLFW window\n");
+        glfwDestroyWindow(handle);
         glfwTerminate();
         return NULL;
     }
 
     glfwMakeContextCurrent(handle);
+
+    if (!init_glad()) {
+        glfwTerminate();
+        return NULL;
+    }
 
     glfwSwapInterval(1); // VSync
 
@@ -68,7 +80,7 @@ void glt_window_destroy(glt_window_t *window) {
     glfwTerminate();
 }
 
-GLFWwindow *glt_window_get_handle(const glt_window_t *window) {
+void *glt_window_get_handle(const glt_window_t *window) {
     return window ? window->handle : NULL;
 }
 
@@ -110,6 +122,10 @@ void glt_window_clear(void) {
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
+void glt_window_set_current(glt_window_t *window) {
+    glfwMakeContextCurrent(window->handle);
+}
+
 int glt_window_get_width(const glt_window_t *window) {
     if (!window || !window->handle) {
         return 0;
@@ -128,4 +144,19 @@ int glt_window_get_height(const glt_window_t *window) {
     int width, height;
     glfwGetWindowSize(window->handle, &width, &height);
     return height;
+}
+
+// helper funcs
+
+static void framebuffer_size_callback(GLFWwindow *handle, int width, int height) {
+    (void) handle;
+    glViewport(0, 0, width, height);
+}
+
+static bool init_glad(void) {
+    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
+        fprintf(stderr, "[GLAD::ERROR]: failed to initialize GLAD\n");
+        return 0;
+    }
+    return 1;
 }

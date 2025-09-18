@@ -1,2 +1,0 @@
-add_executable(02_triangle_example main.c)
-target_link_libraries(02_triangle_example glt)

@@ -1,14 +1,17 @@
-#include <math.h>
 #include <stdlib.h>
+#include <stddef.h>
+#include <math.h>
 
 #include "glt.h"
+
+#define OPENGL_MAJOR_VERSION 4
+#define OPENGL_MINOR_VERSION 6
 
 #define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
 #define SCREEN_TITLE "triangle example"
 
-#define OPENGL_MAJOR_VERSION 4
-#define OPENGL_MINOR_VERSION 6
+#define BG_COLOR GLT_WHITE
 
 #define TEXTURE_PATH "img1.png"
 
@@ -67,11 +70,6 @@ int main() {
         goto cleanup;
     }
 
-    if (!glt_init_glad()) {
-        exit_code = EXIT_FAILURE;
-        goto cleanup;
-    }
-
     glt_info_print();
 
     const vertex_t vertices[] = {
@@ -122,7 +120,7 @@ int main() {
         goto cleanup;
     }
 
-    glt_window_set_clear_color(1.f, 1.f, 1.f, 1.f);
+    glt_window_set_clear_color(GLT_UNPACK_COLOR(BG_COLOR), 1.f);
 
     while (!glt_window_should_close(window)) {
         glt_window_process_input(window);
