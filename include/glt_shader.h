@@ -12,6 +12,8 @@ void glt_shader_use(const glt_shader_t *shader);
 
 GLuint glt_shader_get_id(const glt_shader_t *shader);
 
+GLint glt_shader_get_uniform_loc(const glt_shader_t *shader, const char *name);
+
 /* ---- int / ivec ---- */
 
 void glt_shader_set_int(glt_shader_t *shader, const char *name, GLint value);
