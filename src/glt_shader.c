@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 struct glt_shader_t {
     GLuint id;
@@ -11,48 +12,81 @@ struct glt_shader_t {
 static GLboolean g_has_prog_uniforms = GL_FALSE;
 static bool globs_init = false;
 
+// helper funcs decls
+
 static void set_globs(void);
-
-static GLuint shader_compile(GLenum type, const char *src);
-
 static GLboolean check_compile_errors(GLuint shader, const char *type);
-
 static GLboolean check_link_errors(GLuint program);
-
 static void ensure_bounds(const glt_shader_t *shader);
+static char *read_from_text_file(const char *path, size_t *out_size);
 
-glt_shader_t *glt_shader_create(const char *vertex_shader_src, const char *fragment_shader_src) {
-    if (!vertex_shader_src || !fragment_shader_src) {
-        fprintf(stderr, "[SHADER::ERROR] null shader sources.\n");
-        return NULL;
+// public API
+
+GLuint glt_shader_compile_src(GLenum type, const char *src) {
+    const GLuint shader = glCreateShader(type);
+    if (!shader) {
+        fprintf(stderr, "[SHADER::ERROR] glCreateShader failed.\n");
+        return 0;
+    }
+    glShaderSource(shader, 1, &src, NULL);
+    glCompileShader(shader);
+
+    const char *type_name = "SHADER";
+    switch (type) {
+        case GL_VERTEX_SHADER: type_name = "VERTEX";
+            break;
+        case GL_FRAGMENT_SHADER: type_name = "FRAGMENT";
+            break;
+#ifdef GL_GEOMETRY_SHADER
+        case GL_GEOMETRY_SHADER: type_name = "GEOMETRY";
+            break;
+#endif
+        default: break;
     }
 
+    if (!check_compile_errors(shader, type_name)) {
+        glDeleteShader(shader);
+        return 0;
+    }
+    return shader;
+}
+
+GLuint glt_shader_compile_path(GLenum type, const char *path) {
+    if (!path) {
+        return 0;
+    }
+
+    size_t sz = 0;
+    char *src = read_from_text_file(path, &sz);
+    if (!src) {
+        fprintf(stderr, "[SHADER::ERROR] read failed: %s\n", path);
+        return 0;
+    }
+
+    const GLuint id = glt_shader_compile_src(type, src);
+    if (!id) {
+        fprintf(stderr, "[SHADER::ERROR] compile failed: %s\n", path);
+    }
+    free(src);
+    return id;
+}
+
+glt_shader_t *glt_shader_prog_create(GLuint vertex_shader, GLuint fragment_shader) {
+    if (vertex_shader == 0 || fragment_shader == 0) {
+        fprintf(stderr, "[SHADER::ERROR] glt_shader_create failed.\n");
+        return NULL;
+    }
     set_globs();
-
-    const GLuint vertex_shader = shader_compile(GL_VERTEX_SHADER, vertex_shader_src);
-    if (!vertex_shader) {
-        return NULL;
-    }
-
-    const GLuint fragment_shader = shader_compile(GL_FRAGMENT_SHADER, fragment_shader_src);
-    if (!fragment_shader) {
-        glDeleteShader(vertex_shader);
-        return NULL;
-    }
 
     glt_shader_t *shader = malloc(sizeof(glt_shader_t));
     if (!shader) {
         fprintf(stderr, "[SHADER::ERROR] failed to allocate shader_t.\n");
-        glDeleteShader(vertex_shader);
-        glDeleteShader(fragment_shader);
         return NULL;
     }
 
     const GLuint program = glCreateProgram();
-    if (program) {
+    if (program == 0) {
         fprintf(stderr, "[SHADER::ERROR] glCreateProgram failed.\n");
-        glDeleteShader(vertex_shader);
-        glDeleteShader(fragment_shader);
         free(shader);
         return NULL;
     }
@@ -63,9 +97,6 @@ glt_shader_t *glt_shader_create(const char *vertex_shader_src, const char *fragm
     glAttachShader(shader->id, fragment_shader);
     glLinkProgram(shader->id);
 
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
-
     if (!check_link_errors(shader->id)) {
         glDeleteProgram(shader->id);
         free(shader);
@@ -73,6 +104,53 @@ glt_shader_t *glt_shader_create(const char *vertex_shader_src, const char *fragm
     }
 
     return shader;
+}
+
+glt_shader_t *glt_shader_prog_create_src(const char *vertex_shader_src, const char *fragment_shader_src) {
+    if (!vertex_shader_src || !fragment_shader_src) {
+        fprintf(stderr, "[SHADER::ERROR] null shader sources.\n");
+        return NULL;
+    }
+
+    const GLuint vertex_shader = glt_shader_compile_src(GL_VERTEX_SHADER, vertex_shader_src);
+    if (vertex_shader == 0) {
+        return NULL;
+    }
+
+    const GLuint fragment_shader = glt_shader_compile_src(GL_FRAGMENT_SHADER, fragment_shader_src);
+    if (fragment_shader == 0) {
+        glDeleteShader(vertex_shader);
+        return NULL;
+    }
+
+    glt_shader_t *shader = glt_shader_prog_create(vertex_shader, fragment_shader);
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
+
+    return shader;
+}
+
+glt_shader_t *glt_shader_prog_create_path(const char *vertex_shader_path, const char *fragment_shader_path) {
+    if (!vertex_shader_path || !fragment_shader_path) {
+        fprintf(stderr, "[SHADER::ERROR] null file path(s).\n");
+        return NULL;
+    }
+
+    const GLuint vertex_shader = glt_shader_compile_path(GL_VERTEX_SHADER, vertex_shader_path);
+    if (vertex_shader == 0) {
+        return NULL;
+    }
+
+    const GLuint fragment_shader = glt_shader_compile_path(GL_FRAGMENT_SHADER, fragment_shader_path);
+    if (fragment_shader == 0) {
+        glDeleteShader(vertex_shader);
+        return NULL;
+    }
+
+    glt_shader_t *prog = glt_shader_prog_create(vertex_shader, fragment_shader);
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
+    return prog;
 }
 
 void glt_shader_destroy(glt_shader_t *shader) {
@@ -102,7 +180,7 @@ GLint glt_shader_get_uniform_loc(const glt_shader_t *shader, const char *name) {
     return glGetUniformLocation(shader->id, name);
 }
 
-/* ---- int / ivec ---- */
+// int / ivec
 
 void glt_shader_set_int(glt_shader_t *shader, const char *name, GLint value) {
     if (!shader || !shader->id || !name) {
@@ -192,7 +270,7 @@ void glt_shader_set_ivec4_loc(glt_shader_t *shader, GLint loc, GLint x, GLint y,
     }
 }
 
-/* ---- uint / uvec ---- */
+// uint / uvec
 
 void glt_shader_set_uint(const glt_shader_t *shader, const char *name, GLuint value) {
     if (!shader || !shader->id || !name) {
@@ -282,7 +360,7 @@ void glt_shader_set_uvec4_loc(const glt_shader_t *shader, GLint loc, GLuint x, G
     }
 }
 
-/* ---- float / vec ---- */
+// float / vec
 
 void glt_shader_set_float(const glt_shader_t *shader, const char *name, GLfloat v) {
     if (!shader || !shader->id || !name) {
@@ -372,7 +450,7 @@ void glt_shader_set_vec4_loc(const glt_shader_t *shader, GLint loc, GLfloat x, G
     }
 }
 
-/* ---- matrices (float) ---- */
+// matrices (float)
 
 void glt_shader_set_mat2(const glt_shader_t *shader, const char *name, const GLfloat *m2x2) {
     if (!shader || !shader->id || !name || !m2x2) {
@@ -405,6 +483,7 @@ void glt_shader_set_mat3(const glt_shader_t *shader, const char *name, const GLf
         glt_shader_set_mat3_loc(shader, loc, m3x3);
     }
 }
+
 void glt_shader_set_mat3_loc(const glt_shader_t *shader, GLint loc, const GLfloat *m3x3) {
     if (!shader || !shader->id || loc < 0 || !m3x3) {
         return;
@@ -439,7 +518,7 @@ void glt_shader_set_mat4_loc(const glt_shader_t *shader, GLint loc, const GLfloa
     }
 }
 
-/* ---- helpers ---- */
+// helpers
 
 static void set_globs(void) {
     if (globs_init) {
@@ -447,35 +526,6 @@ static void set_globs(void) {
     }
     g_has_prog_uniforms = glProgramUniform1i != NULL;
     globs_init = true;
-}
-
-static GLuint shader_compile(GLenum type, const char *src) {
-    const GLuint shader = glCreateShader(type);
-    if (!shader) {
-        fprintf(stderr, "[SHADER::ERROR] glCreateShader failed.\n");
-        return 0;
-    }
-    glShaderSource(shader, 1, &src, NULL);
-    glCompileShader(shader);
-
-    const char *type_name = "SHADER";
-    switch (type) {
-        case GL_VERTEX_SHADER: type_name = "VERTEX";
-            break;
-        case GL_FRAGMENT_SHADER: type_name = "FRAGMENT";
-            break;
-#ifdef GL_GEOMETRY_SHADER
-        case GL_GEOMETRY_SHADER: type_name = "GEOMETRY";
-            break;
-#endif
-        default: break;
-    }
-
-    if (!check_compile_errors(shader, type_name)) {
-        glDeleteShader(shader);
-        return 0;
-    }
-    return shader;
 }
 
 static GLboolean check_compile_errors(GLuint shader, const char *type) {
@@ -531,4 +581,53 @@ static void ensure_bounds(const glt_shader_t *shader) {
     if ((GLuint) shader_id_cur != shader->id) {
         glUseProgram(shader->id);
     }
+}
+
+static char *read_from_text_file(const char *path, size_t *out_size) {
+    if (out_size) {
+        *out_size = 0;
+    }
+    if (!path) {
+        return NULL;
+    }
+
+    FILE *f = fopen(path, "rb");
+    if (!f) {
+        fprintf(stderr, "[SHADER::ERROR] can't open file: %s\n", path);
+        return NULL;
+    }
+
+    if (fseek(f, 0, SEEK_END) != 0) {
+        fclose(f);
+        return NULL;
+    }
+    const long len = ftell(f);
+    if (len < 0) {
+        fclose(f);
+        return NULL;
+    }
+    if (fseek(f, 0, SEEK_SET) != 0) {
+        fclose(f);
+        return NULL;
+    }
+
+    const size_t n = len;
+    char *buf = malloc(n + 1);
+    if (!buf) {
+        fclose(f);
+        return NULL;
+    }
+
+    const size_t rd = fread(buf, 1, n, f);
+    fclose(f);
+    if (rd != n) {
+        free(buf);
+        return NULL;
+    }
+
+    buf[n] = '\0';
+    if (out_size) {
+        *out_size = n;
+    }
+    return buf;
 }

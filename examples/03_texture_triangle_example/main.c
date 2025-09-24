@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stddef.h>
-#include <math.h>
 
 #include "glt.h"
 
@@ -9,46 +8,19 @@
 
 #define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
-#define SCREEN_TITLE "triangle example"
+#define SCREEN_TITLE "03_texture_triangle example"
 
 #define BG_COLOR GLT_WHITE
 
-#define TEXTURE_PATH "img1.png"
+#define TEXTURE_PATH "textures/img2.png"
 
-const char *vertex_src =
-        "#version 460 core\n"
-
-        "layout (location = 0) in vec3 a_pos;\n"
-        "layout (location = 1) in vec3 a_color;\n"
-        "layout (location = 2) in vec2 a_tex;\n"
-
-        "out vec3 color;\n"
-        "out vec2 tex;\n"
-
-        "void main() {\n"
-        "    gl_Position = vec4(a_pos, 1.0);\n"
-        "    color = a_color;\n"
-        "    tex = a_tex;\n"
-        "}\n";
-
-const char *fragment_src =
-        "#version 460 core\n"
-
-        "out vec4 frag_color;\n"
-
-        "in vec3 color;\n"
-        "in vec2 tex;\n"
-
-        "uniform sampler2D tex_sampler;\n"
-
-        "void main() {\n"
-        "    frag_color = texture(tex_sampler, tex) * vec4(color, 1.0);\n"
-        "}\n";
+#define VERTEX_SHADER_PATH "shaders/shader.vert"
+#define FRAGMENT_SHADER_PATH "shaders/shader.frag"
 
 typedef struct {
     GLfloat pos[3];
     GLfloat color[3];
-    GLfloat tex[2];
+    GLfloat tex_coord[2];
 } vertex_t;
 
 int main() {
@@ -60,8 +32,7 @@ int main() {
     glt_texture_t *texture = NULL;
 
     window = glt_window_create(
-        SCREEN_WIDTH, SCREEN_HEIGHT,
-        SCREEN_TITLE,
+        SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE,
         OPENGL_MAJOR_VERSION, OPENGL_MINOR_VERSION
     );
 
@@ -73,9 +44,9 @@ int main() {
     glt_info_print();
 
     const vertex_t vertices[] = {
-        {{-0.5f, -0.5f, 0.f}, {1.f, 0.f, 0.f}, {0.f, 0.f}},
-        {{0.5f, -0.5f, 0.f}, {0.f, 1.f, 0.f}, {1.f, 0.f}},
-        {{0.0f, 0.5f, 0.f}, {0.f, 0.f, 1.f}, {0.5f, 1.f}},
+        {.pos = {-0.5f, -0.5f, 0.f}, .color = {1.f, 0.f, 0.f}, .tex_coord = {0.f, 0.f}},
+        {.pos = {0.5f, -0.5f, 0.f}, .color = {0.f, 1.f, 0.f}, .tex_coord = {1.f, 0.f}},
+        {.pos = {0.0f, 0.5f, 0.f}, .color = {0.f, 0.f, 1.f}, .tex_coord = {0.5f, 1.f}},
     };
 
     vbo = glt_vertex_buffer_create(vertices, sizeof(vertices), GL_STATIC_DRAW);
@@ -103,10 +74,10 @@ int main() {
     glt_vertex_array_attrib_pointerf(
         vao, vbo,
         2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat),
-        (void *) offsetof(vertex_t, tex)
+        (void *) offsetof(vertex_t, tex_coord)
     );
 
-    shader = glt_shader_create(vertex_src, fragment_src);
+    shader = glt_shader_prog_create_path(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
     if (!shader) {
         exit_code = EXIT_FAILURE;
         goto cleanup;

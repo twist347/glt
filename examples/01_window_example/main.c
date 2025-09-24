@@ -1,5 +1,4 @@
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "glt.h"
@@ -18,8 +17,7 @@ int main() {
     glt_window_t *window = NULL;
 
     window = glt_window_create(
-        SCREEN_WIDTH, SCREEN_HEIGHT,
-        SCREEN_TITLE,
+        SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE,
         OPENGL_MAJOR_VERSION, OPENGL_MINOR_VERSION
     );
     if (!window) {

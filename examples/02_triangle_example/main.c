@@ -49,8 +49,7 @@ int main() {
     glt_vertex_array_t *vao = NULL;
 
     window = glt_window_create(
-        SCREEN_WIDTH, SCREEN_HEIGHT,
-        SCREEN_TITLE,
+        SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE,
         OPENGL_MAJOR_VERSION, OPENGL_MINOR_VERSION
     );
 
@@ -62,9 +61,9 @@ int main() {
     glt_info_print();
 
     const vertex_t vertices[] = {
-        {{-0.5f, -0.5f, 0.f}, {1.f, 0.f, 0.f}}, // left
-        {{0.5f, -0.5f, 0.f}, {0.f, 1.f, 0.f}}, // right
-        {{0.0f, 0.5f, 0.f}, {0.f, 0.f, 1.f}} // top
+        {.pos = {-0.5f, -0.5f, 0.f}, .color = {1.f, 0.f, 0.f}}, // left
+        {.pos = {0.5f, -0.5f, 0.f}, .color = {0.f, 1.f, 0.f}}, // right
+        {.pos = {0.0f, 0.5f, 0.f}, .color = {0.f, 0.f, 1.f}} // top
     };
 
     vbo = glt_vertex_buffer_create(vertices, sizeof(vertices), GL_STATIC_DRAW);
@@ -91,7 +90,7 @@ int main() {
         (void *) offsetof(vertex_t, color)
     );
 
-    shader = glt_shader_create(vertex_src, fragment_src);
+    shader = glt_shader_prog_create_src(vertex_src, fragment_src);
     if (!shader) {
         exit_code = EXIT_FAILURE;
         goto cleanup;
