@@ -34,6 +34,7 @@ add_library(glt STATIC
         src/glt_texture.c
         src/glt_info.c
         src/glt_log.c
+        src/glt_math.c
 )
 
 target_include_directories(glt PUBLIC
