@@ -1,7 +1,10 @@
 #include "glt_vertex_buffer.h"
+#include "glt_log.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#define VB_LOG(level, msg, ...)    glt_log(level, "[VERTEX BUFFER]: " msg, ##__VA_ARGS__)
 
 struct glt_vertex_buffer_t {
     GLuint id;
@@ -13,13 +16,13 @@ static int check_created_size(GLenum target, GLsizeiptr expected);
 
 glt_vertex_buffer_t *glt_vertex_buffer_create(const void *data, GLsizeiptr size, GLenum usage) {
     if (size <= 0) {
-        fprintf(stderr, "[VERTEX_BUFFER::ERROR] invalid buffer size: %ld\n", size);
+        VB_LOG(GLT_LOG_ERROR, "invalid buffer size: %ld", size);
         return NULL;
     }
 
     glt_vertex_buffer_t *buffer = malloc(sizeof(glt_vertex_buffer_t));
     if (!buffer) {
-        fprintf(stderr, "[VERTEX_BUFFER::ERROR] failed to allocate memory\n");
+        VB_LOG(GLT_LOG_ERROR, "failed to allocate memory");
         return NULL;
     }
 
@@ -29,17 +32,18 @@ glt_vertex_buffer_t *glt_vertex_buffer_create(const void *data, GLsizeiptr size,
 
     glGenBuffers(1, &buffer->id);
     if (!buffer->id) {
-        fprintf(stderr, "[VERTEX_BUFFER::ERROR] failed to glGenBuffers\n");
+        VB_LOG(GLT_LOG_ERROR, "failed to glGenBuffers");
         free(buffer);
         return NULL;
     }
+
     glBindBuffer(GL_ARRAY_BUFFER, buffer->id);
     glBufferData(GL_ARRAY_BUFFER, size, data, usage);
     const int ok = check_created_size(GL_ARRAY_BUFFER, size);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     if (!ok) {
-        fprintf(stderr, "[VERTEX_BUFFER::ERROR] glBufferData failed to allocate %ld bytes\n", size);
+        VB_LOG(GLT_LOG_ERROR, "glBufferData failed to allocate %ld bytes", size);
         glDeleteBuffers(1, &buffer->id);
         free(buffer);
         return NULL;
@@ -54,8 +58,10 @@ void glt_vertex_buffer_destroy(glt_vertex_buffer_t *buffer) {
     if (buffer) {
         if (buffer->id) {
             glDeleteBuffers(1, &buffer->id);
+            buffer->id = 0;
         }
         free(buffer);
+        buffer = NULL;
     }
 }
 

@@ -2,6 +2,8 @@
 
 #include "glad/glad.h"
 
+// TODO: unpack color macro
+
 #define GLT_UNPACK_COLOR(color) ((color)[0]), ((color)[1]), ((color)[2])
 
 #define GLT_RED   ((GLfloat[3]){1.f, 0.f, 0.f})

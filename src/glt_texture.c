@@ -1,4 +1,5 @@
 #include "glt_texture.h"
+#include "glt_log.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,6 +7,8 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+#define TEXTURE_LOG(level, msg, ...)    glt_log(level, "[TEXTURE]: " msg, ##__VA_ARGS__)
 
 struct glt_texture_t {
     GLuint id;
@@ -100,7 +103,7 @@ static GLuint create_gl_texture_from_pixels(int width, int height, int channels,
 
     GLenum internal_format = 0, format = 0;
     if (!choose_formats(channels, &internal_format, &format)) {
-        fprintf(stderr, "[TEXTURE::ERROR] unsupported channel count: %d\n", channels);
+        TEXTURE_LOG(GLT_LOG_ERROR, "unsupported channel count: %d", channels);
         return 0;
     }
 
@@ -136,7 +139,7 @@ static GLuint texture_load(const char *path, int *w, int *h) {
     stbi_set_flip_vertically_on_load(GL_TRUE);
     unsigned char *data = stbi_load(path, &width, &height, &channels, 0);
     if (!data) {
-        fprintf(stderr, "[TEXTURE::ERROR] failed to load image '%s'\n", path);
+        TEXTURE_LOG(GLT_LOG_ERROR, "failed to load image '%s'", path);
         return 0;
     }
     const GLuint id = create_gl_texture_from_pixels(width, height, channels, data);

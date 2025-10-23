@@ -1,10 +1,14 @@
 #include "glt_window.h"
+#include "glt_log.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <glad/glad.h>
 #include "GLFW/glfw3.h"
+
+#define WINDOW_LOG(level, msg, ...)    glt_log(level, "[WINDOW]: " msg, ##__VA_ARGS__)
+#define GLAD_LOG(level, msg, ...)      glt_log(level, "[GLAD]: " msg, ##__VA_ARGS__)
 
 struct glt_window_t {
     GLFWwindow *handle;
@@ -20,7 +24,7 @@ static bool init_glad(void);
 
 glt_window_t *glt_window_create(int width, int height, const char *title, int major_ver, int minor_ver) {
     if (!glfwInit()) {
-        fprintf(stderr, "[WINDOW::ERROR] failed to initialize GLFW\n");
+        WINDOW_LOG(GLT_LOG_ERROR, "failed to initialize GLFW");
         return NULL;
     }
 
@@ -33,7 +37,7 @@ glt_window_t *glt_window_create(int width, int height, const char *title, int ma
 
     GLFWwindow *handle = glfwCreateWindow(width, height, title, NULL, NULL);
     if (!handle) {
-        fprintf(stderr, "[WINDOW::ERROR] failed to create GLFW window\n");
+        WINDOW_LOG(GLT_LOG_ERROR, "failed to create GLFW window");
         glfwDestroyWindow(handle);
         glfwTerminate();
         return NULL;
@@ -55,7 +59,7 @@ glt_window_t *glt_window_create(int width, int height, const char *title, int ma
 
     glt_window_t *window = malloc(sizeof(glt_window_t));
     if (!window) {
-        fprintf(stderr, "[WINDOW::ERROR] failed to allocate memory for window\n");
+        WINDOW_LOG(GLT_LOG_ERROR, "failed to allocate memory for window");
         glfwDestroyWindow(handle);
         glfwTerminate();
         return NULL;
@@ -155,7 +159,7 @@ static void framebuffer_size_callback(GLFWwindow *handle, int width, int height)
 
 static bool init_glad(void) {
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
-        fprintf(stderr, "[GLAD::ERROR]: failed to initialize GLAD\n");
+        GLAD_LOG(GLT_LOG_ERROR, "failed to initialize GLAD");
         return 0;
     }
     return 1;

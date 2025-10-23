@@ -7,3 +7,4 @@
 #include "glt_window.h"
 #include "glt_texture.h"
 #include "glt_color.h"
+#include "glt_log.h"

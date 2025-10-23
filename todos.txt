@@ -1,0 +1,2 @@
+1. do like in raylib
+void SetShaderValue(Shader shader, int locIndex, const void *value, int uniformType);

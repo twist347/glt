@@ -1,9 +1,12 @@
 #include "glt_shader.h"
+#include "glt_log.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+
+#define SHADER_LOG(level, msg, ...)    glt_log(level, "[SHADER]: " msg, ##__VA_ARGS__)
 
 struct glt_shader_t {
     GLuint id;
@@ -25,7 +28,7 @@ static char *read_from_text_file(const char *path, size_t *out_size);
 GLuint glt_shader_compile_src(GLenum type, const char *src) {
     const GLuint shader = glCreateShader(type);
     if (!shader) {
-        fprintf(stderr, "[SHADER::ERROR] glCreateShader failed.\n");
+        SHADER_LOG(GLT_LOG_ERROR, "glCreateShader failed");
         return 0;
     }
     glShaderSource(shader, 1, &src, NULL);
@@ -59,13 +62,13 @@ GLuint glt_shader_compile_path(GLenum type, const char *path) {
     size_t sz = 0;
     char *src = read_from_text_file(path, &sz);
     if (!src) {
-        fprintf(stderr, "[SHADER::ERROR] read failed: %s\n", path);
+        SHADER_LOG(GLT_LOG_ERROR, "read failed: '%s'", path);
         return 0;
     }
 
     const GLuint id = glt_shader_compile_src(type, src);
     if (!id) {
-        fprintf(stderr, "[SHADER::ERROR] compile failed: %s\n", path);
+        SHADER_LOG(GLT_LOG_ERROR, "compile failed: '%s'", path);
     }
     free(src);
     return id;
@@ -73,20 +76,20 @@ GLuint glt_shader_compile_path(GLenum type, const char *path) {
 
 glt_shader_t *glt_shader_prog_create(GLuint vertex_shader, GLuint fragment_shader) {
     if (vertex_shader == 0 || fragment_shader == 0) {
-        fprintf(stderr, "[SHADER::ERROR] glt_shader_create failed.\n");
+        SHADER_LOG(GLT_LOG_ERROR, "zero IDs of vertex or fragment shaders");
         return NULL;
     }
     set_globs();
 
     glt_shader_t *shader = malloc(sizeof(glt_shader_t));
     if (!shader) {
-        fprintf(stderr, "[SHADER::ERROR] failed to allocate shader_t.\n");
+        SHADER_LOG(GLT_LOG_ERROR, "failed to allocate shader_t");
         return NULL;
     }
 
     const GLuint program = glCreateProgram();
     if (program == 0) {
-        fprintf(stderr, "[SHADER::ERROR] glCreateProgram failed.\n");
+        SHADER_LOG(GLT_LOG_ERROR, "glCreateProgram failed");
         free(shader);
         return NULL;
     }
@@ -108,7 +111,7 @@ glt_shader_t *glt_shader_prog_create(GLuint vertex_shader, GLuint fragment_shade
 
 glt_shader_t *glt_shader_prog_create_src(const char *vertex_shader_src, const char *fragment_shader_src) {
     if (!vertex_shader_src || !fragment_shader_src) {
-        fprintf(stderr, "[SHADER::ERROR] null shader sources.\n");
+        SHADER_LOG(GLT_LOG_ERROR, "null shader sources");
         return NULL;
     }
 
@@ -132,7 +135,7 @@ glt_shader_t *glt_shader_prog_create_src(const char *vertex_shader_src, const ch
 
 glt_shader_t *glt_shader_prog_create_path(const char *vertex_shader_path, const char *fragment_shader_path) {
     if (!vertex_shader_path || !fragment_shader_path) {
-        fprintf(stderr, "[SHADER::ERROR] null file path(s).\n");
+        SHADER_LOG(GLT_LOG_ERROR, "null shader paths");
         return NULL;
     }
 
@@ -160,6 +163,7 @@ void glt_shader_destroy(glt_shader_t *shader) {
             shader->id = 0;
         }
         free(shader);
+        shader = NULL;
     }
 }
 
@@ -540,11 +544,11 @@ static GLboolean check_compile_errors(GLuint shader, const char *type) {
         }
         char *log = malloc(len);
         if (!log) {
-            fprintf(stderr, "[SHADER::ERROR] %s compile failed (no mem for log)\n", type);
+            SHADER_LOG(GLT_LOG_ERROR, "'%s' compile failed (no mem for log)", type);
             return GL_FALSE;
         }
         glGetShaderInfoLog(shader, len, NULL, log);
-        fprintf(stderr, "[SHADER::ERROR] %s compilation failed:\n%s\n", type, log);
+        SHADER_LOG(GLT_LOG_ERROR, "'%s' compilation failed:\n%s", type, log);
         free(log);
         return GL_FALSE;
     }
@@ -564,11 +568,11 @@ static GLboolean check_link_errors(GLuint program) {
         }
         char *log = malloc(len);
         if (!log) {
-            fprintf(stderr, "[SHADER::ERROR] link failed (no mem for log)\n");
+            SHADER_LOG(GLT_LOG_ERROR, "link failed (no mem for log)");
             return GL_FALSE;
         }
         glGetProgramInfoLog(program, len, NULL, log);
-        fprintf(stderr, "[SHADER::ERROR] program linking failed:\n%s\n", log);
+        SHADER_LOG(GLT_LOG_ERROR, "program linking failed:\n%s", log);
         free(log);
         return GL_FALSE;
     }
@@ -593,7 +597,7 @@ static char *read_from_text_file(const char *path, size_t *out_size) {
 
     FILE *f = fopen(path, "rb");
     if (!f) {
-        fprintf(stderr, "[SHADER::ERROR] can't open file: %s\n", path);
+        SHADER_LOG(GLT_LOG_ERROR, "can't open file: '%s'", path);
         return NULL;
     }
 

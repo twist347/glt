@@ -33,6 +33,7 @@ add_library(glt STATIC
         src/glt_vertex_array.c
         src/glt_texture.c
         src/glt_info.c
+        src/glt_log.c
 )
 
 target_include_directories(glt PUBLIC

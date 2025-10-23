@@ -1,7 +1,10 @@
 #include "glt_vertex_array.h"
+#include "glt_log.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#define VA_LOG(level, msg, ...)    glt_log(level, "[VERTEX ARRAY]: " msg, ##__VA_ARGS__)
 
 struct glt_vertex_array_t {
     GLuint id;
@@ -12,14 +15,14 @@ static void bind_vao_and_vbo(const glt_vertex_array_t *vao, const glt_vertex_buf
 glt_vertex_array_t *glt_vertex_array_create(void) {
     glt_vertex_array_t *array = malloc(sizeof(glt_vertex_array_t));
     if (!array) {
-        fprintf(stderr, "[VERTEX_ARRAY::ERROR] failed to allocate memory\n");
+        VA_LOG(GLT_LOG_ERROR, "failed to allocate memory");
         return NULL;
     }
     array->id = 0;
 
     glGenVertexArrays(1, &array->id);
     if (!array->id) {
-        fprintf(stderr, "[VERTEX_ARRAY::ERROR] failed to create vertex array\n");
+        VA_LOG(GLT_LOG_ERROR, "failed to create vertex array");
         free(array);
         return NULL;
     }
@@ -69,7 +72,7 @@ void glt_vertex_array_attrib_pointerf(
     GLsizei stride, const void *pointer
 ) {
     if (!vao || !vbo) {
-        fprintf(stderr, "[VERTEX_ARRAY::ERROR] attrib_pointerf: null vao or vbo\n");
+        VA_LOG(GLT_LOG_ERROR, "attrib_pointerf: null vao or vbo");
         return;
     }
     bind_vao_and_vbo(vao, vbo);
@@ -84,7 +87,7 @@ void glt_vertex_array_attrib_pointeri(
     GLsizei stride, const void *pointer
 ) {
     if (!vao || !vbo) {
-        fprintf(stderr, "[VERTEX_ARRAY::ERROR] attrib_pointeri: null vao or vbo\n");
+        VA_LOG(GLT_LOG_ERROR, "attrib_pointeri: null vao or vbo");
         return;
     }
     bind_vao_and_vbo(vao, vbo);
@@ -99,7 +102,7 @@ void glt_vertex_array_attrib_pointerl(
     GLsizei stride, const void *pointer
 ) {
     if (!vao || !vbo) {
-        fprintf(stderr, "[VERTEX_ARRAY::ERROR] attrib_pointerl: null vao or vbo\n");
+        VA_LOG(GLT_LOG_ERROR, "attrib_pointerl: null vao or vbo");
         return;
     }
     bind_vao_and_vbo(vao, vbo);
